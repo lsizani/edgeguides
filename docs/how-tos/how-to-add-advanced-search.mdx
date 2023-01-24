@@ -1,0 +1,142 @@
+---
+sidebar_position: 7
+---
+
+# How to add advanced search to Solidus
+
+In this guide, we'll see how to improve the default search capabilities
+offered by default in the starter frontend, extending its potential with
+features like search autocomplete with suggestions, typo tolerance, etc.
+
+This how-to will use a gem called [Searchkick][searchkick-github], which
+is one of most popular choices in the Rails ecosystem.
+
+## Installing Searchkick
+
+:::caution
+
+Searchkick supports both Elasticsearch and OpenSearch. This guide
+section covers the installation with Elasticsearch. Please, refer to
+[Searchkick README][searchkick-github] for more installation options.
+
+:::
+
+:::info
+
+Be sure you have Elasticsearch up and running. Please, follow the
+official [installation instructions][elasticsearch-install-guide],
+or if you are a MacOS and Homebrew user, just run:
+
+```
+brew install elastic/tap/elasticsearch-full
+brew services start elasticsearch-full
+```
+
+:::
+
+Let's get started by adding the necessary gems to our Gemfile:
+
+```
+bundle add searchkick elasticsearch
+```
+
+## Product Indexing Configuration
+
+We can now customize our Product model to tell it how its information
+should be indexed. We can [customize][override-core] the `Spree::Product`
+core model:
+
+```ruby title="app/overrides/my_store/spree/product/add_searchkick.rb"
+module MyStore
+  module Spree
+    module Product
+      module AddSearchkick
+
+
+        # TODO: add content complete
+
+
+        ::Spree::Product.prepend self
+      end
+    end
+  end
+end
+```
+
+Now it's time for our first indexing.
+
+```ruby title="bin/rails c"
+Spree::Product.reindex
+```
+
+or
+
+```sh
+$ bin/rails searchkick:reindex CLASS=Spree::Product
+```
+
+At this poing we can verify that a basic search is working.
+Assuming you have some products which include the `ruby`
+word in one of the indexed fields, you can run:
+
+```ruby title="bin/rails c"
+Spree::Product.search("ruby").map(&:name)
+# => ["Ruby Hoodie", "Ruby Polo", "Ruby Mug", "Ruby Tote", "Ruby Hoodie Zip"]
+```
+
+## Automcomplete search on the storefront
+
+### Feature Design
+
+For this how-to, we want to keep the architecture of the solution
+as simple as possible, yet providing a solution good enough for a
+complete initial version.
+
+We are going to use StimulusJS for managing the UI interactions
+like listening to the search input, requesting suggestions to the
+server, and navigating through the results proposed.
+
+The idea is that, when typing a search term in the search input,
+we will call the `products/autocomplete` endpoint, passing our
+partial search term as parameter. The related controller action
+will respond with the HTML to render in the suggestions box.
+
+Search results presented in the suggestion box will be links to
+the product pages.
+
+### New search form HTML
+
+TODO
+
+### UI and UX
+
+TODO
+
+### Products Autocomplete Controller Action
+
+TODO
+
+### Perform normal searches
+
+What if the result is not there? Can we still search as we
+were doing before?
+TODO
+
+## Next steps
+
+### Reindex Strategies
+
+TODO
+
+- background job indexing
+- association touching
+
+
+### Advanced features
+
+TODO
+
+
+[searchkick-github]: https://github.com/ankane/searchkick
+[elasticsearch-install-guide]: https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html
+[override-core]: /customization/customizing-the-core#using-overrides
